@@ -92,7 +92,7 @@ graph TD
 
 ## Engineering Decisions
 
-> This section is intended for technical interviews and architectural review. Each decision reflects a deliberate tradeoff.
+> This section is intended for architectural review. Each decision reflects a deliberate tradeoff.
 
 ### Why Redis Streams?
 Redis Streams provides durable, ordered, consumer-group-aware message delivery — unlike plain Pub/Sub which drops messages for offline consumers. This enables exactly-once processing semantics, replay capability, and horizontal scaling via named consumer groups without requiring Kafka infrastructure.
@@ -298,7 +298,7 @@ Each scenario runs autonomously, generating realistic incident sequences with AI
 
 ## What This Project Demonstrates
 
-For technical interviewers and engineering teams:
+For engineering teams:
 
 | Area | Evidence |
 |------|----------|
