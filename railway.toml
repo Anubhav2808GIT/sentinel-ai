@@ -1,0 +1,58 @@
+# ============================================================
+# Railway Deployment Configuration
+# https://docs.railway.app/reference/config-as-code
+#
+# This file defines all four backend services as Railway
+# services. Deploy each service from the monorepo root.
+# ============================================================
+
+[build]
+builder = "DOCKERFILE"
+
+# ─── Service definitions live in Railway dashboard.
+# Point each service to its respective Dockerfile:
+#
+#   ingestion-service   → ./services/ingestion-service/Dockerfile
+#   event-processor     → ./services/event-processor/Dockerfile
+#   ai-analysis         → ./services/ai-analysis/Dockerfile
+#   websocket-gateway   → ./services/websocket-gateway/Dockerfile
+#
+# Build context for all services: . (monorepo root)
+# ─────────────────────────────────────────────────
+
+[deploy]
+# Graceful shutdown — let in-flight requests complete
+# Railway sends SIGTERM, gives 30s before SIGKILL
+numReplicas = 1
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[deploy.healthcheck]
+# Railway will wait for HTTP 200 on /health before routing traffic
+path = "/health"
+timeoutSeconds = 30
+intervalSeconds = 15
+
+# ─── Start command override per service (set in Railway dashboard) ─────────────
+# ingestion-service:
+#   uvicorn app:app --host 0.0.0.0 --port $PORT --workers 2
+#
+# event-processor:
+#   uvicorn app:app --host 0.0.0.0 --port $PORT --workers 1
+#
+# ai-analysis:
+#   uvicorn app:app --host 0.0.0.0 --port $PORT --workers 1
+#
+# websocket-gateway:
+#   uvicorn app:app --host 0.0.0.0 --port $PORT --workers 1
+#   (Single worker required — in-memory connection manager)
+
+# ─── Required Environment Variables per service ────────────────────────────────
+# Set these in Railway → Service → Variables:
+#
+#   POSTGRES_HOST, POSTGRES_PORT, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+#   REDIS_HOST, REDIS_PORT
+#   AI_DEMO_MODE=true
+#   CORS_ORIGINS=https://your-app.vercel.app
+#   LOG_LEVEL=INFO
+#   ENVIRONMENT=production

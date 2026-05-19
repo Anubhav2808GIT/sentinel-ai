@@ -1,0 +1,183 @@
+version: '3.9'
+
+services:
+  redis:
+    image: redis:7
+    container_name: sentinel-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  postgres:
+    image: postgres:16
+    container_name: sentinel-postgres
+    environment:
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel
+      POSTGRES_DB: sentinel_db
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - sentinel-net
+
+  ollama:
+    image: ollama/ollama
+    container_name: sentinel-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  ingestion-service:
+    build:
+      context: .
+      dockerfile: ./services/ingestion-service/Dockerfile
+    container_name: ingestion-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  event-processor:
+    build:
+      context: .
+      dockerfile: ./services/event-processor/Dockerfile
+    container_name: event-processor
+    ports:
+      - "8002:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  ai-analysis:
+    build:
+      context: .
+      dockerfile: ./services/ai-analysis/Dockerfile
+    container_name: ai-analysis
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+      - ollama
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  websocket-gateway:
+    build:
+      context: .
+      dockerfile: ./services/websocket-gateway/Dockerfile
+    container_name: websocket-gateway
+    ports:
+      - "8003:8000"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - websocket-gateway
+      - event-processor
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+  log-generator:
+    build:
+      context: .
+      dockerfile: ./services/event-processor/Dockerfile
+    container_name: log-generator
+    command: python /app/scripts/generate_logs.py
+    environment:
+      - INGESTION_URL=http://ingestion-service:8000/logs
+    volumes:
+      - ./scripts:/app/scripts
+    depends_on:
+      - ingestion-service
+    restart: unless-stopped
+    networks:
+      - sentinel-net
+
+networks:
+  sentinel-net:
+    driver: bridge
+
+volumes:
+  ollama_data:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+

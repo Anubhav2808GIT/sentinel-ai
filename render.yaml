@@ -1,0 +1,85 @@
+services:
+  # ─── Ingestion Service ──────────────────────────────────────────────────────
+  - type: web
+    name: sentinel-ingestion
+    runtime: docker
+    dockerfilePath: ./services/ingestion-service/Dockerfile
+    dockerContext: .
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: AI_DEMO_MODE
+        value: "true"
+      - fromGroup: sentinel-shared
+
+  # ─── Event Processor (also serves REST API) ─────────────────────────────────
+  - type: web
+    name: sentinel-event-processor
+    runtime: docker
+    dockerfilePath: ./services/event-processor/Dockerfile
+    dockerContext: .
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - fromGroup: sentinel-shared
+
+  # ─── AI Analysis Service ─────────────────────────────────────────────────────
+  - type: web
+    name: sentinel-ai-analysis
+    runtime: docker
+    dockerfilePath: ./services/ai-analysis/Dockerfile
+    dockerContext: .
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: AI_DEMO_MODE
+        value: "true"
+      - fromGroup: sentinel-shared
+
+  # ─── WebSocket Gateway ───────────────────────────────────────────────────────
+  - type: web
+    name: sentinel-websocket-gateway
+    runtime: docker
+    dockerfilePath: ./services/websocket-gateway/Dockerfile
+    dockerContext: .
+    plan: starter
+    numInstances: 1          # MUST be 1 — in-memory WS connection manager
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - fromGroup: sentinel-shared
+
+# ─── Shared Environment Variable Group ──────────────────────────────────────────
+# Create this group in Render Dashboard → Environment → Groups
+# Add all POSTGRES_* and REDIS_* variables there.
+#
+# Required keys in the "sentinel-shared" group:
+#   POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB, POSTGRES_HOST, POSTGRES_PORT
+#   REDIS_HOST, REDIS_PORT
+#   CORS_ORIGINS (comma-separated Vercel URLs)

@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'ingestion-service'
+    static_configs:
+      - targets: ['ingestion-service:8000']
+
+  - job_name: 'event-processor'
+    static_configs:
+      - targets: ['event-processor:8000']
+
+  - job_name: 'ai-analysis'
+    static_configs:
+      - targets: ['ai-analysis:8000']
+
+  - job_name: 'websocket-gateway'
+    static_configs:
+      - targets: ['websocket-gateway:8000']
