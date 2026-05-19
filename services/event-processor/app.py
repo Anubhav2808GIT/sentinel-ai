@@ -91,4 +91,19 @@ async def get_incident_by_id(incident_id: str, session: AsyncSession = Depends(g
     incident = result.scalar_one_or_none()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
+        
+    # On-demand trigger: if this incident doesn't have an AI analysis yet, trigger it
+    # in the background. The frontend's 5s auto-polling will load it on the next tick.
+    if not incident.ai_analysis:
+        try:
+            import uuid
+            from correlation.engine import _trigger_ai_analysis
+            asyncio.create_task(
+                _trigger_ai_analysis(uuid.UUID(incident_id), incident.service, incident.severity),
+                name=f"ai-ondemand-{incident_id}"
+            )
+            logger.info("On-demand AI analysis triggered for %s", incident_id)
+        except Exception as e:
+            logger.error("Failed to trigger on-demand AI analysis for %s: %s", incident_id, e)
+            
     return incident

@@ -4,6 +4,8 @@ import dynamic from "next/dynamic";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 
+import { useEffect } from "react";
+
 // ─── ReactFlow must be dynamically imported with ssr:false ────────────────────
 // It uses window/ResizeObserver/DOM APIs that don't exist on the server.
 // A direct import causes a blank page (or hydration crash) in Next.js App Router.
@@ -23,6 +25,11 @@ const ArchitectureFlow = dynamic(
 );
 
 export default function ArchitecturePage() {
+  // ─── Document Title Guard ──────────────────────────────────────────────────
+  useEffect(() => {
+    document.title = "SentinelAI — System Architecture Map";
+  }, []);
+
   return (
     // h-screen (not min-h-screen) gives ReactFlow a concrete pixel height to measure
     <div className="h-screen bg-[#0a0a0b] flex flex-col relative overflow-hidden">

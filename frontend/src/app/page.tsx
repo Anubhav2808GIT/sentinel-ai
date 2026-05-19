@@ -67,6 +67,11 @@ export default function Dashboard() {
   const [demoMode, setDemoMode] = useState<DemoScenario | null>(null);
   const [reconnectBanner, setReconnectBanner] = useState(false);
 
+  // ─── Document Title Guard ──────────────────────────────────────────────────
+  useEffect(() => {
+    document.title = "SentinelAI — Real-Time Incident Intelligence";
+  }, []);
+
   // ─── Reconnect banner ────────────────────────────────────────────────────────
   const prevWsStatus = useRef<WsStatus>("connecting");
   useEffect(() => {
