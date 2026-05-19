@@ -32,8 +32,6 @@
 |-----------------|-----------|
 | ![Architecture](docs/screenshots/architecture.png) | ![Live Feed](docs/screenshots/live-feed.png) |
 
-> **Note:** Add screenshots to `docs/screenshots/` after your first run. See [Screenshot Guide](#screenshot-guide).
-
 ---
 
 ## Platform Overview
@@ -286,12 +284,6 @@ Each scenario runs autonomously, generating realistic incident sequences with AI
 
 ---
 
-## Deployment
-
-See [docs/deployment.md](docs/deployment.md) for the full production deployment guide covering Vercel (frontend), Railway/Render (backend services), managed PostgreSQL/Redis, environment configuration, CORS setup, and health check verification.
-
----
-
 ## Future Roadmap
 
 | Feature | Description |
@@ -321,19 +313,6 @@ For technical interviewers and engineering teams:
 
 ---
 
-## Screenshot Guide
-
-After starting the stack, capture screenshots and save them to `docs/screenshots/`:
-
-```bash
-mkdir -p docs/screenshots
-# dashboard.png     — main NOC command center view
-# incident-modal.png — incident detail panel with AI analysis
-# architecture.png  — /architecture route (system topology)
-# live-feed.png     — zoomed incident feed with severity badges
-```
-
----
 
 <div align="center">
 
